@@ -1,5 +1,11 @@
 from django.http import HttpResponse
 from django.shortcuts import render
+from models import Photo
 
 def home(request):
-    return HttpResponse("TEST")
+    photos = Photo.objects.all()
+    html = '<ul>'
+    for photo in photos:
+        html += '<li>' + photo.name + '</li>'
+    html += '</ul>'
+    return HttpResponse(html)

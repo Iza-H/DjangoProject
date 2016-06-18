@@ -1,5 +1,6 @@
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
+from photos.forms import PhotoForm
 from .models import Photo
 from .models import PUBLIC
 
@@ -31,3 +32,23 @@ def detail(request, pk):
         return render(request, 'photos/detail.html', context)
     else:
         return HttpResponseNotFound('Photo does not exist')
+
+
+def create(request):
+    """
+    Shows a form for a new photo
+    :param request: HttpRequest
+    :return: HttpResponse
+    """
+    if request.method=='GET':
+        form=PhotoForm()
+    else:
+        form=PhotoForm(request.POST)
+        if form.is_valid():
+            new_photo = form.save()
+
+    form = PhotoForm()
+    context = {
+        'form' : form
+    }
+    return render(request, 'photos/new_photo.html', context)

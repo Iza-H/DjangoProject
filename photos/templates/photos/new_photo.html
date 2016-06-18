@@ -1,0 +1,14 @@
+{% extends 'base.html' %}
+
+{% block title %} Create a new photo {% endblock %}
+
+{% block section %}
+    <h2>Create a new photo:</h2>
+    <form method="post">
+        {% csrf_token %}
+
+        {{ form.as_p }}
+        <button>Create</button>
+    </form>
+
+{% endblock %}

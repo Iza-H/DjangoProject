@@ -140,3 +140,8 @@ LOGGING = {
         },
     }
 }
+
+#Login URL:
+LOGIN_URL = ('/login')
+
+BADWORDS = [u'some_prohibited_world']

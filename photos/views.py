@@ -1,8 +1,11 @@
+from django.contrib.auth.decorators import login_required
+from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseNotFound
 from django.shortcuts import render
 from photos.forms import PhotoForm
 from .models import Photo
 from .models import PUBLIC
+
 
 def home(request):
     """
@@ -34,21 +37,31 @@ def detail(request, pk):
         return HttpResponseNotFound('Photo does not exist')
 
 
+@login_required()
 def create(request):
     """
     Shows a form for a new photo
     :param request: HttpRequest
     :return: HttpResponse
     """
+    success_message=''
     if request.method=='GET':
         form=PhotoForm()
     else:
-        form=PhotoForm(request.POST)
+        photo_with_owner = Photo()
+        photo_with_owner.owner = request.user #user authenticated
+        form=PhotoForm(request.POST, instance=photo_with_owner)
         if form.is_valid():
             new_photo = form.save()
+            form = PhotoForm() #a new clean form
+            success_message = 'Photo saved correctlly'
+            success_message += '<a href = "{0}">'.format(reverse('photo_detail', args=[new_photo.pk]))
+            success_message += 'Show photo'
+            success_message += '</a>'
 
     form = PhotoForm()
     context = {
-        'form' : form
+        'form' : form,
+        'success_message' : success_message
     }
     return render(request, 'photos/new_photo.html', context)

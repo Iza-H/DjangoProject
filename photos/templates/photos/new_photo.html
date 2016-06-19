@@ -3,6 +3,7 @@
 {% block title %} Create a new photo {% endblock %}
 
 {% block section %}
+    {% if success_message %} <span style="color:green">{{ success_message | safe }} </span> {% endif %}
     <h2>Create a new photo:</h2>
     <form method="post">
         {% csrf_token %}

@@ -1,12 +1,22 @@
 from django.shortcuts import render, redirect
 from django.contrib.auth import logout as django_logout, authenticate, login as django_login
+from django.views.generic import View
 from users.forms import LoginForm
 
+class LoginView(View):
+    def get(self, request):
+        error_messages =[]
+        form = LoginForm()
+        context = {
+            'errors': error_messages,
+            'login_form': form
+        }
+        return render(request, 'users/login.html', context)
 
-def login(request):
 
-    error_messages =[]
-    if request.method=='POST':
+    def post(self,request):
+
+        error_messages =[]
         form = LoginForm(request.POST)
         if form.is_valid():
             #username = request.POST.get('usr')
@@ -23,17 +33,12 @@ def login(request):
                     return redirect(url)
                 else:
                     error_messages.append('User is inactive')
-    else:
-        form = LoginForm()
-    context = {
-        'errors': error_messages,
-        'login_form': form
-    }
-    return render(request, 'users/login.html', context)
+            return render(request, 'users/login.html', context)
 
-def logout(request):
-    if request.user.is_authenticated():
-        django_logout(request)
-    return redirect('photos_home')
+class LogoutView(View):
+    def get(self, request):
+        if request.user.is_authenticated():
+            django_logout(request)
+        return redirect('photos_home')
 
 

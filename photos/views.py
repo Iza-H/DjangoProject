@@ -1,13 +1,25 @@
 from django.contrib.auth.decorators import login_required
 from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseNotFound
-from django.views.generic import View
+from django.views.generic import View, ListView
 from django.shortcuts import render
 from django.utils.decorators import method_decorator
 from django.db.models import Q
 from photos.forms import PhotoForm
 from .models import Photo
 from .models import PUBLIC
+
+
+
+class PhotosQuerySet(object):
+    def get_photos_query_set(self, request):
+        if not request.user.is_authenticated():
+            photos = Photo.objects.filter(visibility=PUBLIC)
+        elif request.user.is_superuser:
+            photos = Photo.objects.all()
+        else:
+            photos = Photo.objects.filter(Q(owner=request.user) | Q(visibility = PUBLIC))
+        return photos
 
 class HomeView(View):
     def get(self, request):
@@ -21,7 +33,7 @@ class HomeView(View):
         return render(request, 'photos/home.html', context)
         #return HttpResponse(html)
 
-class DetailView(View):
+class DetailView(View, PhotosQuerySet):
     def get(self, request, pk):
         """
         Shows details page for the photo
@@ -29,7 +41,8 @@ class DetailView(View):
         :param pk: id of the photo
         :return: HttpResponse
         """
-        possible_photos = Photo.objects.filter(pk=pk).select_related('owner')
+        #possible_photos = Photo.objects.filter(pk=pk).select_related('owner')
+        possible_photos = self.get_photos_query_set(request).filter(pk=pk).select_related('owner')
         photo = possible_photos[0] if len(possible_photos)==1 else None
         if photo is not None:
             context = {
@@ -88,19 +101,23 @@ class CreateView(View):
         return render(request, 'photos/new_photo.html', context)
 
 
-class ListView(View):
+class PhotoListView(View, PhotosQuerySet):
     def get(self, request):
         """
         :param request:
         :return:
         """
-        if not request.user.is_authenticated():
-            photos = Photo.objects.filter(visibility=PUBLIC)
-        elif request.user.is_superuser:
-            photos = Photo.objects.all()
-        else:
-            photos = Photo.objects.filter(Q(owner=request.user) | Q(visibility = PUBLIC))
+
         context = {
-            'photos':photos
+            'photos':self.get_photos_query_set(request)
         }
         return render(request, 'photos/photos_list.html', context)
+
+
+class UserPhotosView(ListView):
+    model = Photo
+    template_name =  'photos/user_photos.html'
+
+    def get_queryset(self):
+        queryset = super(UserPhotosView, self).get_queryset()
+        return queryset.filter(owner=self.request.user)

@@ -3,6 +3,8 @@ from django.core.urlresolvers import reverse
 from django.http import HttpResponse, HttpResponseNotFound
 from django.views.generic import View
 from django.shortcuts import render
+from django.utils.decorators import method_decorator
+from django.db.models import Q
 from photos.forms import PhotoForm
 from .models import Photo
 from .models import PUBLIC
@@ -38,17 +40,35 @@ class DetailView(View):
             return HttpResponseNotFound('Photo does not exist')
 
 
-@login_required()
-def create(request):
-    """
-    Shows a form for a new photo
-    :param request: HttpRequest
-    :return: HttpResponse
-    """
-    success_message=''
-    if request.method=='GET':
-        form=PhotoForm()
-    else:
+
+class CreateView(View):
+    @method_decorator(login_required())
+    def get(request):
+        """
+        Shows a form for a new photo
+        :param request: HttpRequest
+        :return: HttpResponse
+        """
+
+        if request.method=='GET':
+            form=PhotoForm()
+
+        form = PhotoForm()
+        context = {
+            'form' : form,
+            'success_message' : ''
+        }
+        return render(request, 'photos/new_photo.html', context)
+
+
+    @method_decorator(login_required())
+    def post(request):
+        """
+        Shows a form for a new photo
+        :param request: HttpRequest
+        :return: HttpResponse
+        """
+        success_message=''
         photo_with_owner = Photo()
         photo_with_owner.owner = request.user #user authenticated
         form=PhotoForm(request.POST, instance=photo_with_owner)
@@ -60,9 +80,27 @@ def create(request):
             success_message += 'Show photo'
             success_message += '</a>'
 
-    form = PhotoForm()
-    context = {
-        'form' : form,
-        'success_message' : success_message
-    }
-    return render(request, 'photos/new_photo.html', context)
+        form = PhotoForm()
+        context = {
+            'form' : form,
+            'success_message' : success_message
+        }
+        return render(request, 'photos/new_photo.html', context)
+
+
+class ListView(View):
+    def get(self, request):
+        """
+        :param request:
+        :return:
+        """
+        if not request.user.is_authenticated():
+            photos = Photo.objects.filter(visibility=PUBLIC)
+        elif request.user.is_superuser:
+            photos = Photo.objects.all()
+        else:
+            photos = Photo.objects.filter(Q(owner=request.user) | Q(visibility = PUBLIC))
+        context = {
+            'photos':photos
+        }
+        return render(request, 'photos/photos_list.html', context)

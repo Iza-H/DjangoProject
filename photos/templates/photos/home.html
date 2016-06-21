@@ -5,13 +5,7 @@
     {% if photos_list|length > 0 %}
 
         <h2>Last photos:</h2>
-        {% for photo in photos_list %}
-            <!--<a href="photos/{{ photo.pk }}">-->
-            <a href="{% url 'photo_detail' photo.pk %}">
-                <img src="{{ photo.url }}" alt="{{ photo.name }}" height="150">
-            </a>
-
-        {% endfor %}
+        {% include 'photos/photos_loop.html' %}
     {% else %}
         <h2>Unfortynately there aren't any photos</h2>
     {% endif %}

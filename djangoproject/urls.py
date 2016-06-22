@@ -2,6 +2,7 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.contrib.auth.decorators import login_required
 from photos.views import HomeView, PhotoListView, UserPhotosView
+from users.api import UserListAPI
 from users.views import LoginView
 from users.views import LogoutView
 from photos.views import DetailView
@@ -19,5 +20,8 @@ urlpatterns = [
 
     # Users URLS
     url(r'^login$', LoginView.as_view() , name='users_login'),
-    url(r'^logout$', LogoutView.as_view() , name='users_logout')
+    url(r'^logout$', LogoutView.as_view() , name='users_logout'),
+
+    #Users API
+    url(r'^api/1.0/users/$', UserListAPI.as_view(), name = 'user_list_api')
 ]

@@ -28,4 +28,10 @@ class UserSerializer(serializers.Serializer):
         instance.save()
         return instance
 
+    def validate_username(self, data):
+        users = User.objects.filter(username = data)
+        if len(users) != 0:
+            raise serializers.ValidationError("Username already exists")
+        else:
+            return data
 
